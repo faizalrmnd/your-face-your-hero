@@ -6,17 +6,171 @@
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js" integrity="sha384-cs/chFZiN24E4KMATLdqdvsezGxaGsi4hLGOzlXwp5UZB1LY//20VyM2taTB4QvJ" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js" integrity="sha384-uefMccjFJAIv6A+rW+L4AHf99KvxDjWSu1z9VI8SKNVmz4sk7buKt/6v9KI65qnm" crossorigin="anonymous"></script>
 <style>
 body,h1,h2,h3,h4,h5,h6 {font-family: "Raleway", Arial, Helvetica, sans-serif}
 .mySlides {display:none}
 </style>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<!-- <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script> -->
+<script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60=" crossorigin="anonymous"></script>
+
 <body class="w3-content w3-border-left w3-border-right">
 
+    <script type="text/javascript">
+      function processImage() {
+        $('#song').empty()
+          // $('#song').remove()
+          // **********************************************
+          // *** Update or verify the following values. ***
+          // **********************************************
+    
+          // Replace the subscriptionKey string value with your valid subscription key.
+          var subscriptionKey = "71f70de940134806befa549350cbef26";
+    
+          // Replace or verify the region.
+          //
+          // You must use the same region in your REST API call as you used to obtain your subscription keys.
+          // For example, if you obtained your subscription keys from the westus region, replace
+          // "westcentralus" in the URI below with "westus".
+          //
+          // NOTE: Free trial subscription keys are generated in the westcentralus region, so if you are using
+          // a free trial subscription key, you should not need to change this region.
+          var uriBase = "https://westcentralus.api.cognitive.microsoft.com/face/v1.0/detect";
+    
+          // Request parameters.
+          var params = {
+              "returnFaceId": "true",
+              "returnFaceLandmarks": "false",
+              "returnFaceAttributes": "age,gender,headPose,smile,facialHair,glasses,emotion,hair,makeup,occlusion,accessories,blur,exposure,noise",
+          };
+    
+          // Display the image.
+          var sourceImageUrl = document.getElementById("inputImage").value;
+          document.querySelector("#sourceImage").src = sourceImageUrl;
+    
+          // Perform the REST API call.
+          $.ajax({
+              url: uriBase + "?" + $.param(params),
+    
+              // Request headers.
+              beforeSend: function(xhrObj){
+                  xhrObj.setRequestHeader("Content-Type","application/json");
+                  xhrObj.setRequestHeader("Ocp-Apim-Subscription-Key", subscriptionKey);
+              },
+    
+              type: "POST",
+    
+              // Request body.
+              data: '{"url": ' + '"' + sourceImageUrl + '"}',
+          })
+    
+          .done(function(data) {
+              // Show formatted JSON on webpage.
+              // $("#responseTextArea").val(JSON.stringify(data, null, 2));
+              // let hasil = JSON.stringify(data)
+              console.log(data[0].faceAttributes.emotion)
+    
+              let emotions = data[0].faceAttributes.emotion
+    
+              var max = 0
+              var str = ''
+    
+              for (var property in emotions) {
+                if (emotions[property]>max) {
+                  max = emotions[property]
+                  str = property
+                }
+              }
+    
+              // $("#responseTextArea").val("your emotion is " + str);
+              $('.hasil').text('your emotion is ' + str)
+    
+              console.log(str);
+    
+              axios.post('http://localhost:3000/heros', {
+                  emotion: str
+                })
+                .then(function (response) {
+                  console.log(response);
+                  
+                  let heros = response.data.arrTop5
+                  console.log('-XXXXX->',heros)
+                  document.getElementById('img1').src = hero()[heros[0]]
+                  document.getElementById('img2').src = hero()[heros[1]]
+                  document.getElementById('img3').src = hero()[heros[2]]
+                  document.getElementById('img4').src = hero()[heros[3]]
+                  document.getElementById('img5').src = hero()[heros[4]]
+                  document.getElementById('name1').innerHTML = heros[0]
+                  document.getElementById('name2').innerHTML = heros[1]
+                  document.getElementById('name3').innerHTML = heros[2]
+                  document.getElementById('name4').innerHTML = heros[3]
+                  document.getElementById('name5').innerHTML = heros[4]
+                })
+                .catch(function (error) {
+                  console.log(error);
+                });
+    
+              axios.post('http://localhost:3000/song', {
+                  emotion: str
+                })
+                .then(function (response) {
+                  //-----
+                  console.log(response);
+                  let songs = response.data
+                  console.log('-->',songs)
+                  songs.forEach(element => {
+                // console.log(element.previewUrl)
+                  
+                  getSong({
+                    tract: element.trackName,
+                    singer: element.artistName,
+                    link: element.previewUrl
+                    })
+                  })
+                  //-------
+                })
+                .catch(function (error) {
+                  console.log(error);
+                });
+                function getSong (objlagu) {
+                  
+                  $('#song').append(`
+                  <b>Artist: ${objlagu.singer}</b><br>
+                  song: ${objlagu.tract}<br>
+                  <audio controls>
+                      <source src="${objlagu.link}" type="audio/ogg">
+                      <source src="${objlagu.link}" type="audio/mpeg">
+                      Your browser does not support the audio element.
+                  </audio>
+                  <p/>
+                  `)
+                }
+    
+          })
+    
+          .fail(function(jqXHR, textStatus, errorThrown) {
+              // Display error message.
+              var errorString = (errorThrown === "") ? "Error. " : errorThrown + " (" + jqXHR.status + "): ";
+              errorString += (jqXHR.responseText === "") ? "" : (jQuery.parseJSON(jqXHR.responseText).message) ?
+                  jQuery.parseJSON(jqXHR.responseText).message : jQuery.parseJSON(jqXHR.responseText).error.message;
+              alert(errorString);
+          });
+      };
+    </script>
+    
+
 <!-- Sidebar/menu -->
-<nav class="w3-sidebar w3-light-grey w3-collapse w3-top" style="z-index:3;width:260px" id="mySidebar">
+<nav class="w3-sidebar w3-light-red w3-collapse w3-top" style="z-index:3;width:260px" id="mySidebar">
   <div class="w3-container w3-display-container w3-padding-16">
-      <input class="w3-input w3-border" type="text" placeholder="image url" name="Kids" min="0" max="6">
-      <p><button class="w3-button w3-block w3-green w3-left-align" type="submit"><i class="w3-margin-right"></i> Scan Your Face</button></p>
+      <input class="w3-input w3-border" type="text" name="inputImage" id="inputImage" value="" />
+      <!-- <input class="w3-input w3-border" type="text" placeholder="image url" name="Kids" min="0" max="6"> -->
+      <p><button onclick="processImage()" class="w3-button w3-block w3-green w3-left-align" type="submit"><i class="w3-margin-right"></i> Scan Your Face</button></p>
+      <!-- <div id="loginfbbtn" scope="public_profile,email" class="fb-login-button" data-max-rows="1" data-size="large" data-button-type="login_with" data-show-faces="false" autologoutlink="true" data-use-continue-as="false" onlogin="checkLoginState();"></div> -->
+      <button class="btn btn-primary" onclick="logOut()">Log Out</button>
     </form>
   </div>
 </nav>
@@ -38,37 +192,41 @@ body,h1,h2,h3,h4,h5,h6 {font-family: "Raleway", Arial, Helvetica, sans-serif}
 
   <!-- Slideshow Header -->
   <div class="w3-container" id="apartment">
-    <h2 class="w3-text-green">Your Mood</h2>
+    <h2 class="hasil w3-text-green">Your Mood</h2>
     <div class="w3-display-container mySlides">
-    <img src="http://liquipedia.net/commons/images/thumb/f/fa/Abaddon_Large.png/125px-Abaddon_Large.png" style="width:100%;margin-bottom:-6px">
-    </div>
-  </div>
-  <div title="hero" class="w3-row-padding w3-section">
-    <div class="w3-col s3">
-      <img class="demo w3-opacity w3-hover-opacity-off" src="http://liquipedia.net/commons/images/thumb/1/11/Alchemist_Large.png/125px-Alchemist_Large.png" style="width:100%;cursor:pointer" onclick="currentDiv(1)" title="Hero">
-      <span>hero name</span>
-    </div>
-    <div class="w3-col s3">
-      <img class="demo w3-opacity w3-hover-opacity-off" src="http://liquipedia.net/commons/images/thumb/1/11/Alchemist_Large.png/125px-Alchemist_Large.png" style="width:100%;cursor:pointer" onclick="currentDiv(2)" title="Hero">
-      <span>hero name</span>
-    </div>
-    <div class="w3-col s3">
-      <img class="demo w3-opacity w3-hover-opacity-off" src="http://liquipedia.net/commons/images/thumb/1/11/Alchemist_Large.png/125px-Alchemist_Large.png" style="width:100%;cursor:pointer" onclick="currentDiv(3)" title="Hero">
-      <span>hero name</span>
-    </div>
-    <div class="w3-col s3">
-      <img class="demo w3-opacity w3-hover-opacity-off" src="http://liquipedia.net/commons/images/thumb/1/11/Alchemist_Large.png/125px-Alchemist_Large.png" style="width:100%;cursor:pointer" onclick="currentDiv(4)" title="Hero">
-      <span>hero name</span>
-    </div>
-    <div class="w3-col s3">
-        <img class="demo w3-opacity w3-hover-opacity-off" src="http://liquipedia.net/commons/images/thumb/1/11/Alchemist_Large.png/125px-Alchemist_Large.png" style="width:100%;cursor:pointer" onclick="currentDiv(5)" title="Hero">
-        <span>hero name</span>
+    <img id="sourceImage" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Antu_im-invisible-user.svg/2000px-Antu_im-invisible-user.svg.png" style="width:100%;margin-bottom:-6px">
     </div>
   </div>
   <br>
   <br>
-  <div title="music" class="w3-row-padding w3-section">
+  <br>
+  <div style="text-align: center" id="hero" class="w3-row-padding w3-section">
     <div class="w3-col s3">
+      <img id="img1" class="demo  w3-hover-opacity-off" src="https://orig00.deviantart.net/f3d1/f/2012/192/0/9/dota_2_icon_by_snaapsnaap-d56t8wg.png" style="width:100%;cursor:pointer" onclick="currentDiv(1)" title="Hero">
+      <span id="name1">hero name</span>
+    </div>
+    <div class="w3-col s3">
+      <img id="img2" class="demo  w3-hover-opacity-off" src="https://orig00.deviantart.net/f3d1/f/2012/192/0/9/dota_2_icon_by_snaapsnaap-d56t8wg.png" style="width:100%;cursor:pointer" onclick="currentDiv(2)" title="Hero">
+      <span id="name2">hero name</span>
+    </div>
+    <div class="w3-col s3">
+      <img id="img3" class="demo  w3-hover-opacity-off" src="https://orig00.deviantart.net/f3d1/f/2012/192/0/9/dota_2_icon_by_snaapsnaap-d56t8wg.png" style="width:100%;cursor:pointer" onclick="currentDiv(3)" title="Hero">
+      <span id="name3">hero name</span>
+    </div>
+    <div class="w3-col s3">
+      <img id="img4" class="demo  w3-hover-opacity-off" src="https://orig00.deviantart.net/f3d1/f/2012/192/0/9/dota_2_icon_by_snaapsnaap-d56t8wg.png" style="width:100%;cursor:pointer" onclick="currentDiv(4)" title="Hero">
+      <span id="name4">hero name</span>
+    </div>
+    <div class="w3-col s3">
+        <img id="img5" class="demo  w3-hover-opacity-off" src="https://orig00.deviantart.net/f3d1/f/2012/192/0/9/dota_2_icon_by_snaapsnaap-d56t8wg.png" style="width:100%;cursor:pointer" onclick="currentDiv(5)" title="Hero">
+        <span id="name5">hero name</span>
+    </div>
+  </div>
+  <br>
+  <br>
+
+  <div style="text-align: center" id="song" class="w3-row-padding w3-section">
+    <!-- <div class="w3-col s3">
         <img class="demo w3-opacity w3-hover-opacity-off" src="http://liquipedia.net/commons/images/thumb/1/11/Alchemist_Large.png/125px-Alchemist_Large.png" style="width:100%;cursor:pointer" onclick="currentDiv(1)" title="Hero">
     </div>
     <div class="w3-col s3">
@@ -79,12 +237,92 @@ body,h1,h2,h3,h4,h5,h6 {font-family: "Raleway", Arial, Helvetica, sans-serif}
     </div>
     <div class="w3-col s3">
         <img class="demo w3-opacity w3-hover-opacity-off" src="http://liquipedia.net/commons/images/thumb/1/11/Alchemist_Large.png/125px-Alchemist_Large.png" style="width:100%;cursor:pointer" onclick="currentDiv(4)" title="Hero">
-    </div>
+    </div> -->
  </div>
 <!-- End page content -->
+<!-- <h1>Detect Faces:</h1>
+Enter the URL to an image that includes a face or faces, then click the <strong>Analyze face</strong> button.
+<br><br>
+Image to analyze: <input type="text" name="inputImage" id="inputImage" value="https://upload.wikimedia.org/wikipedia/commons/c/c3/RH_Louise_Lillian_Gish.jpg" />
+<button onclick="processImage()">Analyze face</button>
+<br><br>
+<div id="wrapper" style="width:1020px; display:table;">
+    <div id="jsonOutput" style="width:600px; display:table-cell;">
+        Response:
+        <br><br>
+        <textarea id="responseTextArea" class="UIInput" style="width:580px; height:400px;"></textarea>
+        <h2></h2>
+    </div>
+    <div id="imageDiv" style="width:420px; display:table-cell;">
+        Source image:
+        <br><br>
+        <img id="sourceImage" width="400" />
+    </div>
+</div> -->
 </div>
 
+
 <script>
+    function statusChangeCallback(response) {
+    console.log('statusChangeCallback');
+    console.log(response);
+    // The response object is returned with a status field that lets the
+    // app know the current login status of the person.
+    // Full docs on the response object can be found in the documentation
+    // for FB.getLoginStatus().
+    if (response.status === 'connected') {
+      // Logged into your app and Facebook.
+      // testAPI();
+    } else {
+      window.location = 'https://yfyh-db9f7.firebaseapp.com/'
+      // The person is not logged into your app or we are unable to tell.
+    }
+  }
+
+    window.fbAsyncInit = function() {
+    FB.init({
+      appId      : '1702523219806004',
+      cookie     : true,  // enable cookies to allow the server to access 
+                          // the session
+      xfbml      : true,  // parse social plugins on this page
+      version    : 'v3.0' // use graph api version 2.8
+    });
+
+    // Now that we've initialized the JavaScript SDK, we call 
+    // FB.getLoginStatus().  This function gets the state of the
+    // person visiting this page and can return one of three states to
+    // the callback you provide.  They can be:
+    //
+    // 1. Logged into your app ('connected')
+    // 2. Logged into Facebook, but not your app ('not_authorized')
+    // 3. Not logged into Facebook and can't tell if they are logged into
+    //    your app or not.
+    //
+    // These three cases are handled in the callback function.
+
+    FB.getLoginStatus(function(response) {
+      statusChangeCallback(response);
+    });
+    
+
+  };
+  (function(d, s, id) {
+    var js, fjs = d.getElementsByTagName(s)[0];
+    if (d.getElementById(id)) return;
+    js = d.createElement(s); js.id = id;
+    js.src = "https://connect.facebook.net/en_US/sdk.js";
+    fjs.parentNode.insertBefore(js, fjs);
+  }(document, 'script', 'facebook-jssdk'));
+
+function logOut () {
+  FB.logout(function(response) {
+      // user is now logged out
+      localStorage.clear();
+  window.location = "https://yfyh-db9f7.firebaseapp.com/"
+      console.log(response)
+    });
+
+}
 // Script to open and close sidebar when on tablets and phones
 function w3_open() {
     document.getElementById("mySidebar").style.display = "block";
@@ -125,5 +363,7 @@ function showDivs(n) {
 }
 </script>
 
+<script src="lib/piclist.js"></script>
+<!-- <script src="fb-login.js"></script> -->
 </body>
 </html>
