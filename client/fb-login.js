@@ -63,7 +63,9 @@ function statusChangeCallback(response) {
   function testAPI() {
     console.log('Welcome!  Fetching your information.... ');
     FB.api('/me', {fields: ['name','email','picture']}, function(response) {
+      // console.log('ini reposensnensne---' + JSON.stringify(response.picture.data.url))
       localStorage.setItem('name', response.name)
+      localStorage.setItem('picture', response.picture.data.url)
       let obj = {
           idFB: response.id,
           name: response.name,
@@ -72,9 +74,18 @@ function statusChangeCallback(response) {
       axios.post('http://localhost:3000/users/login', obj,{})
        .then(response => {
            localStorage.setItem('Token', response.data.token)
+           window.location = "https://yfyh-db9f7.firebaseapp.com/homeClient.html"
        })
        .catch(err => {
            console.log(err)
        })
     });
   }
+
+  function logOut() {
+    FB.logout(function(response) {
+      // user is now logged out
+      console.log(response)
+    });
+  }
+
