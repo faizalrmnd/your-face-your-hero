@@ -8,73 +8,12 @@
     <title>Document</title>
 </head>
 <body>
+    <div id="hero"><div>
     <div id="singer"></div>
     <div id="song"></div>
 
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-    <script>
-
-        // 21 ROCK = ANGRY
-        // 12 LATINO = NEUTRAL
-        // 14 POP = HAPPINESS
-        // 2 BLUSE = SADNESS
-        
-        let emotion = 'happiness'
-        let id = 0
-
-        switch (emotion) {
-            case 'angry':
-                id = 21
-                break;
-            case 'neutral':
-                id = 12
-                break;
-            case 'happiness':
-                id = 14
-                break;
-            case 'sadness':
-                id = 2
-                break;
-        
-            default:
-                break;
-        }
-
-        axios.get(`https://itunes.apple.com/search?term=genre&genreId=${id}&limit=5`)
-        // axios.get(`https://itunes.apple.com/lookup?id=1239955032&entity=song`)
-        
-        .then(function (response) {
-            console.log(response.data.results)
-            let songs = response.data.results
-            
-            songs.forEach(element => {
-                // console.log(element.previewUrl)
-                getSong({
-                    tract: element.trackName,
-                    singer: element.artistName,
-                    link: element.previewUrl
-                    })
-            });
-            // console.log(response)
-            // let lagu = response.data.results//[0].previewUrl
-            
-        })
-        .catch(function (error) {
-            console.log(error);
-        });    
-
-        function getSong (objlagu) {
-            $('#song').append(`
-            <b>Artist: ${objlagu.singer}</b><br>
-            song: ${objlagu.tract}<br>
-            <audio controls>
-                <source src="${objlagu.link}" type="audio/ogg">
-                <source src="${objlagu.link}" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-            <p/>
-            `)
-        }
+    <script type="text/Javascript" src="controller"
     </script>
 </body>
 </html>

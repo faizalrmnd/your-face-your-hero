@@ -7,6 +7,8 @@ const cors = require('cors')
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
+const hero = require('./routes/hero');
+const song = require('./routes/song')
 
 const app = express();
 
@@ -19,11 +21,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.user(cors())
+app.use(cors())
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
-
+app.use('/heros', hero)
+app.use('/song', song)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
